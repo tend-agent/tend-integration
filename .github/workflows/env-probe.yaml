@@ -1,0 +1,11 @@
+name: env-probe
+on: workflow_dispatch
+jobs:
+  gated:
+    runs-on: ubuntu-latest
+    environment: tend
+    steps:
+      - run: |
+          if [ -n "$T" ]; then echo "HAS_REPO_SECRET=yes len=${#T}"; else echo "HAS_REPO_SECRET=no"; fi
+        env:
+          T: ${{ secrets.TEND_BOT_TOKEN }}
