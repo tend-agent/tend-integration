@@ -1,0 +1,35 @@
+name: probe-fork-review
+
+# Probes two things about a pull_request_review event on a fork PR:
+#   1. whether the event starts a workflow run at all (this run existing)
+#   2. whether the run's GITHUB_TOKEN can POST repository_dispatch to the
+#      base repo (the relay pattern's requirement)
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Report run context
+        run: |
+          echo "event: ${{ github.event_name }}"
+          echo "ref: $GITHUB_REF"
+          echo "head repo: ${{ github.event.pull_request.head.repo.full_name }}"
+          echo "base repo: $GITHUB_REPOSITORY"
+      - name: Attempt repository_dispatch
+        run: |
+          if gh api "repos/$GITHUB_REPOSITORY/dispatches" \
+               -f event_type=fork-probe \
+               -f "client_payload[pr]=${{ github.event.pull_request.number }}"; then
+            echo "DISPATCH-RESULT: SUCCESS"
+          else
+            echo "DISPATCH-RESULT: REFUSED"
+          fi
