@@ -1,0 +1,28 @@
+name: probe-fork-write
+
+# Does a fork PR's review-event run get write when its own workflow file
+# asks for it? The earlier fork probe declared contents: read, which is
+# refused for any run, so it never tested fork-ness at all.
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - run: |
+          echo "head repo: ${{ github.event.pull_request.head.repo.full_name }}"
+          echo "base repo: $GITHUB_REPOSITORY"
+          if gh api "repos/$GITHUB_REPOSITORY/dispatches" \
+               -f event_type=fork-write-probe -f "client_payload[x]=1"; then
+            echo "FORK-CONTENTS-WRITE-DISPATCH: SUCCESS"
+          else
+            echo "FORK-CONTENTS-WRITE-DISPATCH: REFUSED"
+          fi
