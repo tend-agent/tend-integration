@@ -1,0 +1,27 @@
+name: probe-release
+on:
+  push:
+    tags: ["probe-v*"]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: probe-release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Report
+        env:
+          PROBE: ${{ secrets.PROBE_RELEASE_SECRET }}
+        run: |
+          echo "event=${{ github.event_name }} ref=${{ github.ref }} actor=${{ github.actor }}"
+          echo "secret_len=${#PROBE}"
+      - name: OIDC claims
+        run: |
+          TOK=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=probe" | python3 -c 'import sys,json;print(json.load(sys.stdin)["value"])')
+          echo "$TOK" | cut -d. -f2 | tr '_-' '/+' | base64 -d 2>/dev/null | python3 -c 'import sys,json;d=json.load(sys.stdin);print(json.dumps({k:d.get(k) for k in ["sub","ref","environment","job_workflow_ref","workflow_ref","event_name"]}))'
