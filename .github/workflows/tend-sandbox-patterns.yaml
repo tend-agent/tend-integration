@@ -91,6 +91,17 @@ jobs:
             done
             printf "PROBE sandbox rustc-version "
             rustc --version
+            uv --version
+            node --version
+            cowsay tend >/dev/null
+            python --version
+            nox --version
+            hatch --version
+            go version
+            java -version
+            rustup show active-toolchain
+            cargo-hack --version
+            cargo-sort --version
           '
 
       - name: Restore workspace ownership
