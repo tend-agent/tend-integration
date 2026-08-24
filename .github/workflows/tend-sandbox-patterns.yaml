@@ -72,6 +72,16 @@ jobs:
 
       - name: Record sandbox resolutions
         run: |
+          for path in \
+            /home/tend-sandbox/.cargo-install/cargo-sort/bin \
+            /home/tend-sandbox/go/bin \
+            /home/tend-sandbox/.cargo/bin \
+            /home/tend-sandbox/.local/bin \
+            /home/tend-sandbox/.dotnet/tools; do
+            echo "PROBE access $path"
+            sudo namei -l "$path" || true
+            if sudo -u "$SANDBOX" test -x "$path"; then echo "PROBE executable yes"; else echo "PROBE executable no"; fi
+          done
           mapfile -t agent_env <"$AGENT_ENV_FILE"
           sudo -u "$SANDBOX" env "${agent_env[@]}" bash -c '
             echo "PROBE sandbox PATH=$PATH"
