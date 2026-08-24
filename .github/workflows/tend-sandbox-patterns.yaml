@@ -83,7 +83,7 @@ jobs:
             if sudo -u "$SANDBOX" test -x "$path"; then echo "PROBE executable yes"; else echo "PROBE executable no"; fi
           done
           mapfile -t agent_env <"$AGENT_ENV_FILE"
-          sudo -u "$SANDBOX" env "${agent_env[@]}" bash -c '
+          sudo -u "$SANDBOX" env "${agent_env[@]}" bash -euc '
             echo "PROBE sandbox PATH=$PATH"
             env | sort | grep -E "^(CARGO_HOME|RUSTUP_HOME|JAVA_HOME|GOROOT|pythonLocation|UV_)=" || true
             for command in uv node cowsay python nox hatch go java rustup rustc cargo cargo-hack cargo-sort; do
@@ -100,7 +100,7 @@ jobs:
             go version
             java -version
             rustup show active-toolchain
-            cargo-hack --version
+            cargo hack --version
             cargo-sort --version
           '
 
