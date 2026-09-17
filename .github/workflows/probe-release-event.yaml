@@ -1,0 +1,44 @@
+name: probe-release-event
+
+# Probe workflow for the immutable-releases feasibility sweep. Logs which
+# `release` activity types actually fire, and mirrors PRQL's upload-on-release
+# step to see how it fails under immutable releases.
+
+on:
+  release:
+    types:
+      - created
+      - published
+      - prereleased
+      - released
+      - edited
+      - unpublished
+      - deleted
+
+permissions:
+  contents: write
+
+jobs:
+  log-event:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log release event
+        run: |
+          echo "PROBE action=${{ github.event.action }}"
+          echo "PROBE draft=${{ github.event.release.draft }}"
+          echo "PROBE prerelease=${{ github.event.release.prerelease }}"
+          echo "PROBE tag_name=${{ github.event.release.tag_name }}"
+          echo "PROBE id=${{ github.event.release.id }}"
+
+  prql-shaped-upload:
+    # Byte-for-byte the shape of PRQL's `build-prqlc` upload step.
+    runs-on: ubuntu-latest
+    if: github.event.action == 'released'
+    steps:
+      - name: Build a fake artifact
+        run: echo "upload attempted from a release-triggered job" > probe-on-released.bin
+      - name: Upload release artifact
+        uses: softprops/action-gh-release@v3
+        with:
+          append_body: true
+          files: probe-on-released.bin
